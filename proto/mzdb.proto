@@ -2,34 +2,40 @@ syntax = "proto3";
 package mzdb;
 
 service Node {
+  rpc Whothis (WhothisRequest) returns (LookupResponse);
   rpc Lookup (LookupRequest) returns (LookupResponse);
   rpc Get (GetRequest) returns (GetResponse);
   rpc Set (SetRequest) returns (SetResponse);
 }
 
+message WhothisRequest {}
+
 message LookupRequest {
-  string key = 1;
+  uint64 key = 1;
+  bool relay = 2;
 }
 
 message LookupResponse {
-  string key  = 1;
+  uint64 key  = 1;
   string addr = 2;
 }
 
 message GetRequest {
-  string key = 1;
+  uint64 key = 1;
+  bool relay = 2;
 }
 
 message GetResponse {
   oneof response {
-    bytes value = 1;
+    bytes value  = 1;
     string error = 2;
   }
 }
 
 message SetRequest {
-  string key  = 1;
+  uint64 key  = 1;
   bytes value = 2;
+  bool relay  = 3;
 }
 
 message SetResponse {

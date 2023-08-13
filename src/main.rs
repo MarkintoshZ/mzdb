@@ -1,12 +1,18 @@
-use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::{collections::HashMap, sync::Arc};
 
 use clap::Parser;
-use tonic::{transport::Server, Request, Response, Status};
+use tokio::{select, signal, sync::Mutex};
+use tonic::{
+    transport::{Channel, Server},
+    Request, Response, Status,
+};
 
+use mzdb::node_client::NodeClient;
 use mzdb::node_server::{Node, NodeServer};
 use mzdb::{
     get_response, GetRequest, GetResponse, LookupRequest, LookupResponse, SetRequest, SetResponse,
+    WhothisRequest,
 };
 
 /// MZBD server
@@ -22,14 +28,14 @@ struct Args {
     /// node number
     number: u64,
 
-    /// 2^k number hash slots
+    /// 2^m number hash slots
     #[arg(default_value_t = 8)]
-    k: u64,
+    m: u64,
 }
 
 #[derive(Debug)]
 struct NodeInfo {
-    number: u64,
+    key: u64,
     addr: SocketAddr,
 }
 
@@ -39,11 +45,18 @@ struct Storage {
 }
 
 #[derive(Debug)]
-struct NodeState {
-    successor: SocketAddr,
-    fingers: Vec<NodeInfo>,
-    sockets: HashMap<i64, String>,
-    storage: Storage,
+struct Chord {
+    fingers: Vec<Option<NodeInfo>>,
+    sockets: HashMap<SocketAddr, NodeClient<Channel>>,
+}
+
+impl Chord {
+    fn new(m: u64) -> Self {
+        Self {
+            fingers: (0..m).map(|_| None).collect(),
+            sockets: HashMap::new(),
+        }
+    }
 }
 
 pub mod mzdb {
@@ -51,18 +64,27 @@ pub mod mzdb {
 }
 
 #[derive(Debug)]
-pub struct DBNode {
-    state: NodeState,
-}
-
-impl DBNode {
-    fn new(state: NodeState) -> Self {
-        Self { state }
-    }
+pub struct NodeService {
+    info: NodeInfo,
+    storage: Arc<Mutex<Storage>>,
+    chord: Arc<Mutex<Chord>>,
 }
 
 #[tonic::async_trait]
-impl Node for DBNode {
+impl Node for NodeService {
+    async fn whothis(
+        &self,
+        request: Request<WhothisRequest>,
+    ) -> Result<Response<LookupResponse>, Status> {
+        println!("Got a request: {:?}", request);
+
+        let reply = LookupResponse {
+            key: self.info.key,
+            addr: self.info.addr.to_string(),
+        };
+        Ok(Response::new(reply))
+    }
+
     async fn lookup(
         &self,
         request: Request<LookupRequest>,
@@ -70,10 +92,9 @@ impl Node for DBNode {
         println!("Got a request: {:?}", request);
 
         let reply = LookupResponse {
-            key: "hi".to_string(),
-            addr: "".to_string(),
+            key: self.info.key,
+            addr: self.info.addr.to_string(),
         };
-
         Ok(Response::new(reply))
     }
 
@@ -100,20 +121,43 @@ impl Node for DBNode {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // parse cmd args
     let args = Args::parse();
-    let node_state = NodeState {
-        successor: args.successor,
-        fingers: Vec::new(),
-        sockets: HashMap::default(),
-        storage: Storage::default(),
+    let self_info = NodeInfo {
+        key: args.number,
+        addr: args.addr,
     };
+    let storage = Arc::new(Mutex::new(Storage::default()));
+    let chord = Arc::new(Mutex::new(Chord::new(args.m)));
+
+    println!("Starting node: {:?}", self_info);
+
+    // start main process
+    tokio::task::spawn(async move {
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+        match NodeClient::connect(dbg!(format!("http://{}", args.successor))).await {
+            Ok(mut successor) => {
+                let request = tonic::Request::new(WhothisRequest {});
+                let response = successor.whothis(request).await;
+                println!("Response = {:?}", response);
+            }
+            Err(e) => {
+                println!("Client Request Error: {}", e);
+            }
+        }
+    });
 
     // start gRPC server
-    let node = DBNode::new(node_state);
-
-    Server::builder()
+    let node = NodeService {
+        info: self_info,
+        storage: storage.clone(),
+        chord: chord.clone(),
+    };
+    if let Err(e) = Server::builder()
         .add_service(NodeServer::new(node))
         .serve(args.addr)
-        .await?;
+        .await
+    {
+        println!("Error: {}", e);
+    }
 
     Ok(())
 }
