@@ -11,13 +11,13 @@ service Node {
 message WhothisRequest {}
 
 message LookupRequest {
-  uint64 key = 1;
-  bool relay = 2;
+  uint64 key_slot = 1;
+  bool relay      = 2;
 }
 
 message LookupResponse {
-  uint64 key  = 1;
-  string addr = 2;
+  uint64 key_slot  = 1;
+  string addr      = 2;
 }
 
 message GetRequest {

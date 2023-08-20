@@ -26,21 +26,22 @@ pub async fn start(self_info: NodeInfo, chord: Arc<Mutex<Chord>>, args: Args) {
     info!("Building finger table");
     let finger_idx = (0..args.m)
         .map(|i| 2u64.pow(i as u32))
-        .map(|i| (i + self_info.key) % 2u64.pow(args.m as u32));
+        .map(|i| (i + self_info.key_slot) % 2u64.pow(args.m as u32));
 
-    for (i, curr_key) in finger_idx.enumerate().skip(1) {
+    for (i, curr_key_slot) in finger_idx.enumerate().skip(1) {
         let mut chord_guard = chord.lock().await;
-        if let Some(suc) = chord_guard.lookup(curr_key) {
-            let prev_key = curr_key / 2;
-            if (prev_key < suc.key && curr_key <= suc.key)
-                || (prev_key > suc.key && (curr_key <= suc.key || curr_key > prev_key))
+        if let Some(suc) = chord_guard.lookup(curr_key_slot) {
+            let prev_key = curr_key_slot / 2;
+            if (prev_key < suc.key_slot && curr_key_slot <= suc.key_slot)
+                || (prev_key > suc.key_slot
+                    && (curr_key_slot <= suc.key_slot || curr_key_slot > prev_key))
             {
                 chord_guard.fingers[i] = Some(suc);
             } else {
-                let mut successor = chord_guard.lookup_conn(curr_key).unwrap();
+                let mut successor = chord_guard.lookup_conn(curr_key_slot).unwrap();
                 let successor_node = successor
                     .lookup(LookupRequest {
-                        key: curr_key,
+                        key_slot: curr_key_slot,
                         relay: true,
                     })
                     .await

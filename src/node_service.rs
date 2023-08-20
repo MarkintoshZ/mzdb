@@ -26,7 +26,7 @@ impl Node for NodeService {
         debug!("Received request: {:?}", request);
 
         let reply = LookupResponse {
-            key: self.info.key,
+            key_slot: self.info.key_slot,
             addr: self.info.addr.to_string(),
         };
         Ok(Response::new(reply))
@@ -41,9 +41,9 @@ impl Node for NodeService {
         let request = request.into_inner();
         let reply = if request.relay {
             let mut chord_guard = self.chord.lock().await;
-            let next_hop_node = chord_guard.lookup(request.key).unwrap();
+            let next_hop_node = chord_guard.lookup(request.key_slot).unwrap();
             let relay_req = LookupRequest {
-                key: request.key,
+                key_slot: request.key_slot,
                 relay: next_hop_node != *chord_guard.successor_node().unwrap(),
             };
             chord_guard
@@ -56,7 +56,7 @@ impl Node for NodeService {
                 .into_inner()
         } else {
             LookupResponse {
-                key: self.info.key,
+                key_slot: self.info.key_slot,
                 addr: self.info.addr.to_string(),
             }
         };

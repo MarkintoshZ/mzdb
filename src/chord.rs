@@ -29,7 +29,7 @@ impl Chord {
 
         // calculate the successor node index
         let m = self.fingers.len() as u32;
-        let dist = (key - self.info.key).rem_euclid(2u64.pow(m)) as usize;
+        let dist = (key - self.info.key_slot).rem_euclid(2u64.pow(m)) as usize;
         let mut index = cmp::min(dist.ilog2(), m - 1);
 
         // find the farthest node that precedes the index

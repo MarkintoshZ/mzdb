@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // parse cmd args
     let args = Args::parse();
     let self_info = NodeInfo {
-        key: args.number,
+        key_slot: args.number,
         addr: args.addr,
     };
     let storage = Arc::new(Mutex::new(Storage::default()));
