@@ -2,7 +2,7 @@ use crate::chord::Chord;
 use crate::mzdb::node_server::Node;
 use crate::mzdb::{
     get_response, GetRequest, GetResponse, LookupRequest, LookupResponse, SetRequest, SetResponse,
-    WhothisRequest,
+    WhoisRequest,
 };
 use crate::node_info::NodeInfo;
 use crate::storage::Storage;
@@ -26,7 +26,7 @@ pub struct NodeService {
 impl Node for NodeService {
     async fn whothis(
         &self,
-        request: Request<WhothisRequest>,
+        request: Request<WhoisRequest>,
     ) -> Result<Response<LookupResponse>, Status> {
         debug!("Received request: {:?}", request);
 

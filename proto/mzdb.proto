@@ -2,13 +2,13 @@ syntax = "proto3";
 package mzdb;
 
 service Node {
-  rpc Whothis (WhothisRequest) returns (LookupResponse);
+  rpc Whothis (WhoisRequest) returns (LookupResponse);
   rpc Lookup (LookupRequest) returns (LookupResponse);
   rpc Get (GetRequest) returns (GetResponse);
   rpc Set (SetRequest) returns (SetResponse);
 }
 
-message WhothisRequest {}
+message WhoisRequest {}
 
 message LookupRequest {
   uint64 key_slot = 1;

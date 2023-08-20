@@ -1,6 +1,6 @@
 use crate::args::Args;
 use crate::chord::Chord;
-use crate::mzdb::{LookupRequest, WhothisRequest};
+use crate::mzdb::{LookupRequest, WhoisRequest};
 use crate::node_info::NodeInfo;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -12,7 +12,7 @@ pub async fn start(self_info: NodeInfo, chord: Arc<Mutex<Chord>>, args: Args) {
     let mut successor = Chord::create_conn(&args.successor.to_string())
         .await
         .expect("failed to connect to successor");
-    let successor_node = successor.whothis(WhothisRequest {}).await.unwrap();
+    let successor_node = successor.whothis(WhoisRequest {}).await.unwrap();
     chord
         .lock()
         .await

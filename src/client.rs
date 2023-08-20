@@ -5,7 +5,7 @@ mod mzdb {
 
 use mzdb::get_response;
 use mzdb::node_client::NodeClient;
-use mzdb::{GetRequest, LookupRequest, SetRequest, WhothisRequest};
+use mzdb::{GetRequest, LookupRequest, SetRequest, WhoisRequest};
 
 use clap::Parser;
 use tokio::io::{stdin, stdout, AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn shell(mut client: NodeClient<tonic::transport::Channel>) {
     let msg = {
-        let request = Request::new(WhothisRequest {});
+        let request = Request::new(WhoisRequest {});
         let node = client.whothis(request).await.unwrap().into_inner();
         format!("mzdb {} {} > ", node.key_slot, node.addr)
     };
@@ -86,7 +86,7 @@ async fn shell(mut client: NodeClient<tonic::transport::Channel>) {
                     println!("SET: {:?}", response);
                 }
                 "WHOIS" => {
-                    let request = Request::new(WhothisRequest {});
+                    let request = Request::new(WhoisRequest {});
                     let response = client.whothis(request).await.unwrap();
                     let response = response.into_inner();
                     println!("WHOIS: {:?}", response);
