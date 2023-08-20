@@ -8,6 +8,7 @@ use tokio::sync::Mutex;
 pub async fn start(self_info: NodeInfo, chord: Arc<Mutex<Chord>>, args: Args) {
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     // connect to successor
+    info!("Connecting to successor");
     let mut successor = Chord::create_conn(&args.successor.to_string())
         .await
         .expect("failed to connect to successor");
@@ -16,11 +17,13 @@ pub async fn start(self_info: NodeInfo, chord: Arc<Mutex<Chord>>, args: Args) {
         .lock()
         .await
         .set_finger(0, successor_node.into_inner().into(), successor);
-    dbg!(&chord.lock().await.fingers);
+    info!("Successor connected");
+    debug!("{:?}", &chord.lock().await.fingers);
 
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
     // build finger table
+    info!("Building finger table");
     let finger_idx = (0..args.m)
         .map(|i| 2u64.pow(i as u32))
         .map(|i| (i + self_info.key) % 2u64.pow(args.m as u32));
@@ -49,6 +52,7 @@ pub async fn start(self_info: NodeInfo, chord: Arc<Mutex<Chord>>, args: Args) {
         }
         drop(chord_guard);
     }
+    info!("Finger table built");
     chord
         .lock()
         .await
@@ -56,6 +60,6 @@ pub async fn start(self_info: NodeInfo, chord: Arc<Mutex<Chord>>, args: Args) {
         .iter()
         .enumerate()
         .for_each(|(i, f)| {
-            println!("{}: {:?}", i, f);
+            debug!("{}: {:?}", i, f);
         });
 }

@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+
 mod args;
 mod chord;
 mod node_info;
@@ -24,6 +27,8 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
+
     // parse cmd args
     let args = Args::parse();
     let self_info = NodeInfo {
@@ -33,9 +38,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let storage = Arc::new(Mutex::new(Storage::default()));
     let chord = Arc::new(Mutex::new(Chord::new(self_info.clone(), args.m)));
 
-    println!("Starting node: {:?}", self_info);
-
     // start main process
+    info!("Starting main routine");
     {
         tokio::task::spawn(routine::start(
             self_info.clone(),
@@ -45,6 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // start gRPC server
+    info!("Starting gRPC server");
     let node = NodeService {
         info: self_info,
         storage: storage.clone(),

@@ -23,7 +23,7 @@ impl Node for NodeService {
         &self,
         request: Request<WhothisRequest>,
     ) -> Result<Response<LookupResponse>, Status> {
-        println!("Got a request: {:?}", request);
+        debug!("Received request: {:?}", request);
 
         let reply = LookupResponse {
             key: self.info.key,
@@ -36,7 +36,7 @@ impl Node for NodeService {
         &self,
         request: Request<LookupRequest>,
     ) -> Result<Response<LookupResponse>, Status> {
-        println!("Got a request: {:?}", request);
+        debug!("Received request: {:?}", request);
 
         let request = request.into_inner();
         let reply = if request.relay {
@@ -64,7 +64,7 @@ impl Node for NodeService {
     }
 
     async fn get(&self, request: Request<GetRequest>) -> Result<Response<GetResponse>, Status> {
-        println!("Got a request: {:?}", request);
+        debug!("Received request: {:?}", request);
 
         let reply = GetResponse {
             response: Some(get_response::Response::Value("".as_bytes().into())),
@@ -74,7 +74,7 @@ impl Node for NodeService {
     }
 
     async fn set(&self, request: Request<SetRequest>) -> Result<Response<SetResponse>, Status> {
-        println!("Got a request: {:?}", request);
+        debug!("Received request: {:?}", request);
 
         let reply = SetResponse { success: true };
 
