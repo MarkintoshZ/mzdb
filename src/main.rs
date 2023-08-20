@@ -51,6 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // start gRPC server
     info!("Starting gRPC server");
     let node = NodeService {
+        m: args.m,
         info: self_info,
         storage: storage.clone(),
         chord: chord.clone(),

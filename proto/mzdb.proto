@@ -21,7 +21,7 @@ message LookupResponse {
 }
 
 message GetRequest {
-  uint64 key = 1;
+  string key = 1;
   bool relay = 2;
 }
 
@@ -33,7 +33,7 @@ message GetResponse {
 }
 
 message SetRequest {
-  uint64 key  = 1;
+  string key  = 1;
   bytes value = 2;
   bool relay  = 3;
 }
