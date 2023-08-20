@@ -27,8 +27,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let url = format!("http://{}", args.addr);
-    println!("Connecting to {}", url);
     let client = NodeClient::connect(url).await?;
+    println!("Node Connected");
 
     shell(client).await;
 
@@ -36,11 +36,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn shell(mut client: NodeClient<tonic::transport::Channel>) {
+    let msg = {
+        let request = Request::new(WhothisRequest {});
+        let node = client.whothis(request).await.unwrap().into_inner();
+        format!("mzdb {} {} > ", node.key_slot, node.addr)
+    };
+
     let mut reader = BufReader::new(stdin());
     let mut writer = BufWriter::new(stdout());
     let mut buf = String::new();
     loop {
-        writer.write("> ".as_bytes()).await.unwrap();
+        writer.write(msg.as_bytes()).await.unwrap();
         writer.flush().await.unwrap();
         let bytes = reader.read_line(&mut buf).await.unwrap();
         if bytes == 1 {
