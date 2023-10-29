@@ -16,7 +16,7 @@ path = "src/client.rs"
 [dependencies]
 tonic = "0.9"
 prost = "0.11"
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time", "signal"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "macros", "sync", "time", "signal", "fs"] }
 clap = { version = "4.3", features = ["derive"] }
 log = "0.4.20"
 env_logger = "0.10.0"
