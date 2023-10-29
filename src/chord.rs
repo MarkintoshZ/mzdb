@@ -29,20 +29,30 @@ impl Chord {
 
         // calculate the successor node index
         let m = self.fingers.len() as u32;
-        let dist = (key - self.info.key_slot).rem_euclid(2u64.pow(m)) as usize;
-        let mut index = cmp::min(dbg!(dist).ilog2(), m - 1);
+        let dist: u64 = if key > self.info.key_slot {
+            key - self.info.key_slot
+        } else {
+            2u64.pow(m) - self.info.key_slot - key
+        };
+        if dist == 0 {
+            Some(self.info.clone())
+        } else {
+            let mut index = cmp::min(dbg!(dist).ilog2(), m - 1);
+            // dbg!(index, dist, &self.info, &self.fingers);
 
-        // find the farthest node that precedes the index
-        loop {
-            if let Some(node) = self.fingers.get(index as usize).unwrap() {
-                return Some(node.clone());
+            // find the farthest node that precedes the index
+            loop {
+                if let Some(node) = self.fingers.get(index as usize).unwrap() {
+                    return Some(node.clone());
+                }
+                if index == 0 {
+                    break;
+                }
+                // dbg!(index);
+                index -= 1;
             }
-            if index == 0 {
-                break;
-            }
-            index -= 1;
+            None
         }
-        None
     }
 
     pub fn lookup_conn(&self, key: u64) -> Option<NodeClient<Channel>> {
@@ -71,3 +81,14 @@ impl Chord {
         }
     }
 }
+
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+// 
+//     #[test]
+//     fn lookup() {
+//         let node = NodeInfo { key_slot: 2, addr: "127.0.0.1".parse().unwrap() };
+//         let chord = Chord::new(node, 3);
+//     }
+// }

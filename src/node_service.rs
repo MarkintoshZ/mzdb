@@ -73,17 +73,21 @@ impl Node for NodeService {
 
         let request = request.into_inner();
         let key_slot = hash(&request.key, self.m);
-        let reply = if request.relay {
-            let mut chord_guard = self.chord.lock().await;
+        // dbg!(&key_slot);
+        let reply = if request.relay && key_slot != self.info.key_slot {
+            let chord_guard = self.chord.lock().await;
             let next_hop_node = chord_guard.lookup(key_slot).unwrap();
             let relay_req = GetRequest {
                 key: request.key,
-                relay: next_hop_node != *chord_guard.successor_node().unwrap(),
+                relay: next_hop_node != *chord_guard.successor_node().unwrap() && next_hop_node != self.info,
             };
-            chord_guard
+            let mut client = (&chord_guard)
                 .sockets
-                .get_mut(&next_hop_node.addr)
+                .get(&next_hop_node.addr)
                 .unwrap()
+                .clone();
+            drop(chord_guard);
+            client
                 .get(relay_req)
                 .await
                 .expect("failed to get successor")
@@ -107,17 +111,19 @@ impl Node for NodeService {
         let request = request.into_inner();
         let key_slot = hash(&request.key, self.m);
         let reply = if request.relay {
-            let mut chord_guard = self.chord.lock().await;
+            let chord_guard = self.chord.lock().await;
             let next_hop_node = chord_guard.lookup(key_slot).unwrap();
             let relay_req = SetRequest {
                 key: request.key,
                 value: request.value,
-                relay: next_hop_node != *chord_guard.successor_node().unwrap(),
+                relay: next_hop_node != *chord_guard.successor_node().unwrap() && next_hop_node != self.info,
             };
-            chord_guard
+            let mut client = chord_guard
                 .sockets
-                .get_mut(&next_hop_node.addr)
+                .get(&next_hop_node.addr)
                 .unwrap()
+                .clone();
+            client
                 .set(relay_req)
                 .await
                 .expect("failed to get successor")
