@@ -123,6 +123,7 @@ impl Node for NodeService {
                 .get(&next_hop_node.addr)
                 .unwrap()
                 .clone();
+            drop(chord_guard);
             client
                 .set(relay_req)
                 .await
