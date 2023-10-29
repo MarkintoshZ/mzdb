@@ -72,7 +72,7 @@ where
     let mut buf = String::new();
     loop {
         if is_shell {
-            writer.write(msg.as_bytes()).await.unwrap();
+            writer.write_all(msg.as_bytes()).await.unwrap();
         }
         writer.flush().await.unwrap();
         let bytes = reader.read_line(&mut buf).await.unwrap();
@@ -134,7 +134,7 @@ where
             };
 
             writer
-                .write(output.as_bytes())
+                .write_all(output.as_bytes())
                 .await
                 .expect("Unable to write output");
         }

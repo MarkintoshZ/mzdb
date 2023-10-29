@@ -7,11 +7,11 @@ pub struct NodeInfo {
     pub addr: SocketAddr,
 }
 
-impl Into<NodeInfo> for LookupResponse {
-    fn into(self) -> NodeInfo {
-        let addr = self.addr.parse().unwrap();
+impl From<LookupResponse> for NodeInfo {
+    fn from(val: LookupResponse) -> Self {
+        let addr = val.addr.parse().unwrap();
         NodeInfo {
-            key_slot: self.key_slot,
+            key_slot: val.key_slot,
             addr,
         }
     }

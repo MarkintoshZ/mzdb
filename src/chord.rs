@@ -65,7 +65,7 @@ impl Chord {
     }
 
     pub fn set_finger(&mut self, i: usize, node: NodeInfo, client: NodeClient<Channel>) {
-        let addr = node.addr.clone();
+        let addr = node.addr;
         self.fingers[i] = Some(node);
         self.sockets.insert(addr, client);
     }

@@ -81,7 +81,7 @@ impl Node for NodeService {
                 key: request.key,
                 relay: next_hop_node != *chord_guard.successor_node().unwrap() && next_hop_node != self.info,
             };
-            let mut client = (&chord_guard)
+            let mut client = chord_guard
                 .sockets
                 .get(&next_hop_node.addr)
                 .unwrap()
